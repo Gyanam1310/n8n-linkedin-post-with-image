@@ -35,22 +35,6 @@ Google Sheets → AI Summary → LinkedIn Post → Image Prompt → Image Genera
 
 ---
 
-## 📸 Project Preview
-
-### 🔹 Workflow
-
-![Workflow](./n8n-workflow-image.png)
-
-### 🔹 LinkedIn Post Output
-
-![LinkedIn Post](./linkedin-post-image.png)
-
-### 🔹 AI Generated Image
-
-![AI Image](./ai-generated-image.png)
-
----
-
 ## ✨ Features
 
 * ⚡ Fully automated content pipeline
