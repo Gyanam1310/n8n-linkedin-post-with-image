@@ -1,0 +1,148 @@
+{
+  "name": "n8n-ai-linkedin-post-with-image",
+  "nodes": [
+    {
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyHour" }]
+        },
+        "documentId": "YOUR_GOOGLE_SHEET_ID",
+        "sheetName": "Sheet1"
+      }
+    },
+    {
+      "name": "Summarize Article",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1,
+      "position": [250, 0],
+      "parameters": {
+        "promptType": "define",
+        "text": "Summarize this article in a highly engaging and non-theoretical way: {{ $json.Links }}"
+      }
+    },
+    {
+      "name": "Create LinkedIn Post",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1,
+      "position": [500, 0],
+      "parameters": {
+        "promptType": "define",
+        "text": "Create a viral LinkedIn post from this summary:\n{{ $json.text }}"
+      }
+    },
+    {
+      "name": "Generate Image Prompt",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1,
+      "position": [750, 0],
+      "parameters": {
+        "promptType": "define",
+        "text": "Create a modern AI image prompt based on:\n{{ $json.text }}"
+      }
+    },
+    {
+      "name": "Generate Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1000, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.freepik.com/v1/ai/mystic",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-freepik-api-key",
+              "value": "YOUR_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "{{ $json.text }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1200, 0],
+      "parameters": {
+        "amount": 30
+      }
+    },
+    {
+      "name": "Get Image Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1400, 0],
+      "parameters": {
+        "url": "YOUR_STATUS_URL",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-freepik-api-key",
+              "value": "YOUR_API_KEY"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1600, 0],
+      "parameters": {
+        "url": "{{ $json.data.generated[0] }}"
+      }
+    },
+    {
+      "name": "Post to LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [1800, 0],
+      "parameters": {
+        "text": "{{ $node['Create LinkedIn Post'].json.text }}",
+        "shareMediaCategory": "IMAGE"
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [[{ "node": "Summarize Article", "type": "main" }]]
+    },
+    "Summarize Article": {
+      "main": [[{ "node": "Create LinkedIn Post", "type": "main" }]]
+    },
+    "Create LinkedIn Post": {
+      "main": [[{ "node": "Generate Image Prompt", "type": "main" }]]
+    },
+    "Generate Image Prompt": {
+      "main": [[{ "node": "Generate Image", "type": "main" }]]
+    },
+    "Generate Image": {
+      "main": [[{ "node": "Wait", "type": "main" }]]
+    },
+    "Wait": {
+      "main": [[{ "node": "Get Image Status", "type": "main" }]]
+    },
+    "Get Image Status": {
+      "main": [[{ "node": "Download Image", "type": "main" }]]
+    },
+    "Download Image": {
+      "main": [[{ "node": "Post to LinkedIn", "type": "main" }]]
+    }
+  }
+}
